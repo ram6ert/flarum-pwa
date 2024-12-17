@@ -63,8 +63,8 @@ class PushSender
     {
         $users = User::whereIn('id', $userIds)->get()->all();
 
-        $this->log('[PWA PUSH] Notification Type: '.$blueprint::getType());
-        $this->log('[PWA PUSH] Sending for users with ids: '.json_encode(Arr::pluck($users, 'id')));
+        $this->log('[PWA PUSH] Notification Type: ' . $blueprint::getType());
+        $this->log('[PWA PUSH] Sending for users with ids: ' . json_encode(Arr::pluck($users, 'id')));
 
         $notifications = [];
 
@@ -98,7 +98,7 @@ class PushSender
         // https://stackoverflow.com/questions/75685856/what-is-the-cause-of-badwebpushtopic-from-https-web-push-apple-com
         // As suggested, we Base64Url::encode, pad with 0s up to at least 32, and then trim down to exactly 32.
         $safariTopicLen = 32;
-        $typeAndId = $blueprint->getType().strval($blueprint->getSubject()->id ?? -1);
+        $typeAndId = $blueprint->getType() . strval($blueprint->getSubject()->id ?? -1);
         $topic = substr(str_pad(Base64Url::encode($typeAndId), $safariTopicLen, '0'), 0, $safariTopicLen);
 
         $options = [
@@ -127,7 +127,7 @@ class PushSender
          * @var MessageSentReport $report
          */
         foreach ($webPush->flush() as $report) {
-            if (! $report->isSuccess() && in_array($report->getResponse()->getStatusCode(), [401, 403, 404, 410])) {
+            if (! $report->isSuccess() && $report->getResponse() && in_array($report->getResponse()->getStatusCode(), [401, 403, 404, 410])) {
                 PushSubscription::where('endpoint', $report->getEndpoint())->delete();
             } elseif (! $report->isSuccess()) {
                 $this->log("[PWA PUSH] Message failed to sent for subscription {$report->getEndpoint()}: {$report->getReason()}");
